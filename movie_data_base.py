@@ -1,8 +1,6 @@
-from pprint import pprint
 import time
 import requests
 
-from notion_code import save_to_json
 
 api_key = "f7963b039f335f50d513d05f89892a3e"
 base_url = "https://api.themoviedb.org/3"
@@ -11,6 +9,7 @@ base_url = "https://api.themoviedb.org/3"
 def get_media_id(media_type, media_title):
     url = f"{base_url}/search/{media_type}?api_key={api_key}&query={media_title}"
     res = requests.get(url).json()
+    # TODO: Handle logic for no results here
     return res["results"][0]["id"]
 
 
@@ -58,6 +57,7 @@ def extract_info_from_details(details):
     return new_obj
 
 
+# TODOTAB: Use media_title, media_type in the same order
 def get_media_details_wrapper(media_title, media_type):
     media_id = get_media_id(media_type, media_title)
     raw_details = get_media_details_from_id(media_type, media_id)

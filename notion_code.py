@@ -16,9 +16,9 @@ headers = {
 }
 
 
-def save_to_json(response, fileName):
+def save_to_json(response, fileName, isJson=False):
     with open(f"./{fileName}.json", "w") as jsonFile:
-        jsonFile.write(json.dumps(response.json()))
+        jsonFile.write(json.dumps(response if isJson else response.json()))
 
 
 def get_db_rows_filtered_by_status(status):
@@ -49,18 +49,23 @@ def get_notion_multiselect_options(category):
 def get_list_of_movies_from_rows(db_rows):
     media_list = []  # [{mediaName: mediaType}]
     for row in db_rows:
+        # TODO: Clean up replaces
         media_name = (
             row["properties"]["Name"]["title"][0]["plain_text"]
             .lower()
             .replace(" ", "-")
+            .replace("'", "")
         )
         media_type = (
             row["properties"]["Type"]["multi_select"][0]["name"]
             .lower()
             .replace(" ", "-")
+            .replace("'", "")
         )
         notion_id = row["id"]
-        media_list.append([media_name, media_type, notion_id])
+        media_info = [media_name, media_type, notion_id]
+        media_list.append(media_info)
+
     return media_list
 
 

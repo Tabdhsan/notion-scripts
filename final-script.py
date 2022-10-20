@@ -19,11 +19,14 @@ notion_genres = get_notion_multiselect_options(
 notion_directors = get_notion_multiselect_options("Directors")
 notion_producers = get_notion_multiselect_options("Producers")
 
+
 # Get all rows from notion
 notion_rows = get_db_rows_filtered_by_status("*")
 
+
 # Get media list
 all_media_list = get_list_of_movies_from_rows(notion_rows)
+print(all_media_list)
 
 # Get media info from tmdb
 def get_all_media_details_from_tmdb(media_list_from_notion):
@@ -62,9 +65,9 @@ def get_producer_obj_list(producer):
 
 
 # TODOTAB: Separate notion_genres and tmbd_genres and items by names
-def update_db_entry_and_trailer():
+def update_db_entry_and_trailer(movie):
     # TODOTAB: Don't hardcode
-    media_details = all_media_details["In Bruges"]
+    media_details = all_media_details[movie]
     runtime = media_details["runtime"]
     genres = media_details["genres"]
     notion_page_id = media_details["notion_id"]
@@ -81,4 +84,5 @@ def update_db_entry_and_trailer():
     update_trailer(notion_page_id, trailer_url)
 
 
-update_db_entry_and_trailer()
+for key in all_media_details.keys():
+    update_db_entry_and_trailer(key)

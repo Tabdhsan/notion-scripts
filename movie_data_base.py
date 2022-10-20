@@ -58,8 +58,7 @@ def extract_info_from_details(details):
 
 
 # TODOTAB: Use media_title, media_type in the same order
-def get_media_details_wrapper(media_title, media_type):
-    media_id = get_media_id(media_type, media_title)
+def get_media_details_wrapper(media_id, media_title, media_type):
     raw_details = get_media_details_from_id(media_type, media_id)
     clean_details = extract_info_from_details(raw_details)
     return clean_details

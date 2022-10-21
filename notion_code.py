@@ -53,12 +53,14 @@ def get_list_of_movies_from_rows(db_rows):
         media_name = (
             row["properties"]["Name"]["title"][0]["plain_text"]
             .lower()
+            .strip()
             .replace(" ", "-")
             .replace("'", "")
         )
         media_type = (
             row["properties"]["Type"]["multi_select"][0]["name"]
             .lower()
+            .strip()
             .replace(" ", "-")
             .replace("'", "")
         )
@@ -70,7 +72,6 @@ def get_list_of_movies_from_rows(db_rows):
 
 
 def update_media_db_entry(notion_id, runtime, genres, directors, producers):
-
     payload = {
         "parent": {"database_id": "8352e1aaf48944bbb6d5f341eb4eb9f6"},
         "properties": {
@@ -114,7 +115,23 @@ def update_media_db_entry(notion_id, runtime, genres, directors, producers):
 
     url = f"https://api.notion.com/v1/pages/{notion_id}"
     res = requests.patch(url, headers=headers, json=payload)
-    print(res.text if res.status_code == 400 else "")
+    # print("FINAL CLAL-->", res.json())
+
+
+def set_status_to_error(notion_id):
+    payload = {
+        "parent": {"database_id": "8352e1aaf48944bbb6d5f341eb4eb9f6"},
+        "properties": {
+            "Status": {
+                "id": "%7DfrT",
+                "type": "status",
+                "status": {"id": "AuDc", "name": "ERROR", "color": "yellow"},
+            },
+        },
+    }
+
+    url = f"https://api.notion.com/v1/pages/{notion_id}"
+    res = requests.patch(url, headers=headers, json=payload)
 
 
 def update_trailer(notion_page_id, trailer_url):

@@ -1,46 +1,36 @@
-from pprint import pprint
 import time
 import requests
-
-from notion_code import save_to_json
+from typing import List, Optional
+from Types import SingleMediaDetailsBase, MediaTypes
 
 
 api_key = "f7963b039f335f50d513d05f89892a3e"
 base_url = "https://api.themoviedb.org/3"
 
 
-def get_media_id(media_type, media_title):
+def get_media_id(media_type: MediaTypes, media_title: str) -> Optional[str]:
     url = f"{base_url}/search/{media_type}?api_key={api_key}&query={media_title}"
     res = requests.get(url).json()
     if not res["results"]:
         return None
     else:
-        # TODO: Handle logic for no results here
         return res["results"][0]["id"]
 
 
-# TESTING: TV SHOW ID
-def get_tv_show_id(media_type, media_title):
-    url = f"{base_url}/search/{media_type}?api_key={api_key}&query={media_title}"
-    res = requests.get(url).json()
-    # TODO: Handle logic for no results here
-    return res["results"][0]["id"]
-
-
-def get_media_details_from_id(media_type, media_id):
+def get_media_details_from_id(media_type: MediaTypes, media_id: str) -> dict:
     url = f"{base_url}/{media_type}/{media_id}?api_key={api_key}&append_to_response=videos,credits"
     res = requests.get(url).json()
     return res
 
 
-def get_trailer_url_from_details(details):
+def get_trailer_url_from_details(details: dict) -> str:
     videos = details["videos"]["results"]
     for vid in videos:
         if vid["type"] == "Trailer":
             return f"https://www.youtube.com/watch?v={vid['key']}"
 
 
-def get_genres_from_details(media_type, details):
+def get_genres_from_details(media_type: MediaTypes, details: dict) -> List[str]:
     genres = details["genres"]
     res = []
 
@@ -63,7 +53,8 @@ def get_genres_from_details(media_type, details):
     return res
 
 
-def get_producer_and_director(crew_list):
+def get_producer_and_director(crew_list: List[dict]) -> List[list]:
+
     res = [[], []]
     for crew_member in crew_list:
         if crew_member["job"] == "Director":
@@ -74,7 +65,9 @@ def get_producer_and_director(crew_list):
     return res
 
 
-def extract_info_from_details(media_type, details):
+def extract_info_from_details(
+    media_type: MediaTypes, details: dict
+) -> SingleMediaDetailsBase:
     IS_MOVIE = media_type == "movie"
 
     seasons = details["number_of_seasons"] if not IS_MOVIE else ""
@@ -89,7 +82,7 @@ def extract_info_from_details(media_type, details):
 
     genres = get_genres_from_details(media_type, details)
 
-    director, producer = get_producer_and_director(details["credits"]["crew"])
+    directors, producers = get_producer_and_director(details["credits"]["crew"])
 
     trailer = get_trailer_url_from_details(details) if IS_MOVIE else None
 
@@ -97,14 +90,15 @@ def extract_info_from_details(media_type, details):
         "title": title,
         "runtime": runtime,
         "genres": genres,
-        "directors": director,
-        "producers": producer,
+        "directors": directors,
+        "producers": producers,
         "trailer": trailer,
     }
 
 
-# TODOTAB: Use media_title, media_type in the same order
-def get_media_details_wrapper(media_id, media_title, media_type):
+def get_media_details_wrapper(
+    media_id: str, media_type: MediaTypes
+) -> SingleMediaDetailsBase:
     raw_details = get_media_details_from_id(media_type, media_id)
     clean_details = extract_info_from_details(media_type, raw_details)
     return clean_details

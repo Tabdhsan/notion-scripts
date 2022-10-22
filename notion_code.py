@@ -1,9 +1,13 @@
-import json, requests
-from pprint import pprint
+from MORE_HELPERS import get_director_producer_obj_list
+from MORE_HELPERS import get_genre_obj_list
+import requests
+from typing import List
+from enum import Enum
 
-# # TODOTAB: Better name
+from Types import PropCategories
 
 
+# TODOTAB: Move to separate file
 secret = "secret_krZuzei15JbUkAJnV4iFyNfX3U0NvPmmlBUJN8fH5sF"
 db_id = "8352e1aaf48944bbb6d5f341eb4eb9f6"
 
@@ -16,28 +20,20 @@ headers = {
 }
 
 
-def save_to_json(response, fileName, isJson=False):
-    with open(f"./{fileName}.json", "w") as jsonFile:
-        jsonFile.write(json.dumps(response if isJson else response.json()))
-
-
-def get_db_rows_filtered_by_status(status):
+def get_db_rows_filtered_by_status(status: str) -> List[dict]:
     payload = {"filter": {"property": "Status", "status": {"equals": status}}}
     db_url = f"https://api.notion.com/v1/databases/{db_id}/query"
     response = requests.post(db_url, headers=headers, json=payload)
-    save_to_json(response, "db_query")
-
-    return response.json()["results"]  # Array with row objects
+    return response.json()["results"]
 
 
-def get_db_props():
+def get_db_props() -> dict:
     db_url = f"https://api.notion.com/v1/databases/{db_id}"
     response = requests.get(db_url, headers=headers)
-    save_to_json(response, "allprops")
     return response.json()
 
 
-def get_notion_multiselect_options(category):
+def get_notion_multiselect_options(category: PropCategories) -> dict:
     all_db_props = get_db_props()
     clean_dict = {}
     items = all_db_props["properties"][category]["multi_select"]["options"]
@@ -46,10 +42,9 @@ def get_notion_multiselect_options(category):
     return clean_dict
 
 
-def get_list_of_movies_from_rows(db_rows):
-    media_list = []  # [{mediaName: mediaType}]
+def get_list_of_movies_from_rows(db_rows: List[dict]) -> List[List[str]]:
+    media_list = []
     for row in db_rows:
-        # TODO: Clean up replaces
         media_name = (
             row["properties"]["Name"]["title"][0]["plain_text"]
             .lower()
@@ -68,10 +63,17 @@ def get_list_of_movies_from_rows(db_rows):
         media_info = [media_name, media_type, notion_id]
         media_list.append(media_info)
 
+    # Example: [['in-bruges', 'movie', 'd69a7d5a-492d-419e-a421-a0f2e4dc9702']]
     return media_list
 
 
-def update_media_db_entry(notion_id, runtime, genres, directors, producers):
+def update_media_db_entry(
+    notion_id: str,
+    runtime: str,
+    genres: List[dict],
+    directors: List[dict],
+    producers: List[dict],
+) -> None:
     payload = {
         "parent": {"database_id": "8352e1aaf48944bbb6d5f341eb4eb9f6"},
         "properties": {
@@ -114,11 +116,10 @@ def update_media_db_entry(notion_id, runtime, genres, directors, producers):
     }
 
     url = f"https://api.notion.com/v1/pages/{notion_id}"
-    res = requests.patch(url, headers=headers, json=payload)
-    # print("FINAL CLAL-->", res.json())
+    requests.patch(url, headers=headers, json=payload)
 
 
-def set_status_to_error(notion_id):
+def set_status_to_error(notion_id: str) -> None:
     payload = {
         "parent": {"database_id": "8352e1aaf48944bbb6d5f341eb4eb9f6"},
         "properties": {
@@ -131,10 +132,10 @@ def set_status_to_error(notion_id):
     }
 
     url = f"https://api.notion.com/v1/pages/{notion_id}"
-    res = requests.patch(url, headers=headers, json=payload)
+    requests.patch(url, headers=headers, json=payload)
 
 
-def update_trailer(notion_page_id, trailer_url):
+def update_trailer(notion_page_id: str, trailer_url: str) -> None:
     url = f"https://api.notion.com/v1/blocks/{notion_page_id}/children"
     payload = {
         "children": [
@@ -147,3 +148,32 @@ def update_trailer(notion_page_id, trailer_url):
         ]
     }
     requests.patch(url, headers=headers, json=payload)
+
+
+def update_notion_info_wrapper(media_name, all_media_details):
+    genres_from_notion = get_notion_multiselect_options(PropCategories.GENRES)
+    directors_from_notion = get_notion_multiselect_options(PropCategories.DIRECTORS)
+    producers_from_notion = get_notion_multiselect_options(PropCategories.PRODUCERS)
+
+    media_details = all_media_details["success"][media_name]
+    media_type = media_details["media_type"]
+    updated_genres = get_genre_obj_list(media_details["genres"], genres_from_notion)
+
+    updated_directors = get_director_producer_obj_list(
+        media_type, media_details["directors"], directors_from_notion
+    )
+
+    updated_producers = get_director_producer_obj_list(
+        media_type, media_details["producers"], producers_from_notion
+    )
+
+    update_media_db_entry(
+        media_details["notion_id"],
+        media_details["runtime"],
+        updated_genres,
+        updated_directors,
+        updated_producers,
+    )
+
+    if media_type == "movie":
+        update_trailer(media_details["notion_id"], media_details["trailer"])

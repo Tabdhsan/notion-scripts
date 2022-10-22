@@ -1,30 +1,16 @@
-from MORE_HELPERS import get_director_producer_obj_list
-from MORE_HELPERS import get_genre_obj_list
-import requests
 from typing import List
-from enum import Enum
-
+import requests
+from MORE_HELPERS import get_director_producer_obj_list, get_genre_obj_list
+from creds import notion_secret, db_id
 from Types import PropCategories
 
 
-# TODOTAB: Move to separate file
-secret = "secret_krZuzei15JbUkAJnV4iFyNfX3U0NvPmmlBUJN8fH5sF"
-db_id = "8352e1aaf48944bbb6d5f341eb4eb9f6"
-
-
 headers = {
-    "Authorization": f"Bearer {secret}",
+    "Authorization": f"Bearer {notion_secret}",
     "accept": "application/json",
     "Notion-Version": "2022-06-28",
     "content-type": "application/json",
 }
-
-
-def get_db_rows_filtered_by_status(status: str) -> List[dict]:
-    payload = {"filter": {"property": "Status", "status": {"equals": status}}}
-    db_url = f"https://api.notion.com/v1/databases/{db_id}/query"
-    response = requests.post(db_url, headers=headers, json=payload)
-    return response.json()["results"]
 
 
 def get_db_props() -> dict:
@@ -40,6 +26,13 @@ def get_notion_multiselect_options(category: PropCategories) -> dict:
     for item in items:
         clean_dict[f'{item["name"]}'.lower()] = item
     return clean_dict
+
+
+def get_db_rows_filtered_by_status(status: str) -> List[dict]:
+    payload = {"filter": {"property": "Status", "status": {"equals": status}}}
+    db_url = f"https://api.notion.com/v1/databases/{db_id}/query"
+    response = requests.post(db_url, headers=headers, json=payload)
+    return response.json()["results"]
 
 
 def get_list_of_movies_from_rows(db_rows: List[dict]) -> List[List[str]]:

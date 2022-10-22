@@ -33,7 +33,7 @@ def get_all_media_details_from_tmdb(media_from_notion_rows: List[List[str]]):
         }
 
     """
-    res = {"success": {}, "fail": []}
+    res: dict = {"success": {}, "fail": []}
 
     for media_name, media_type, notion_id in media_from_notion_rows:
         media_id = get_media_id(media_type, media_name)

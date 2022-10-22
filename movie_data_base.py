@@ -1,15 +1,15 @@
+from typing import List, Optional
 import time
 import requests
-from typing import List, Optional
 from Types import SingleMediaDetailsBase, MediaTypes
+from creds import tmdb_key
 
 
-api_key = "f7963b039f335f50d513d05f89892a3e"
 base_url = "https://api.themoviedb.org/3"
 
 
 def get_media_id(media_type: MediaTypes, media_title: str) -> Optional[str]:
-    url = f"{base_url}/search/{media_type}?api_key={api_key}&query={media_title}"
+    url = f"{base_url}/search/{media_type}?api_key={tmdb_key}&query={media_title}"
     res = requests.get(url).json()
     if not res["results"]:
         return None
@@ -18,12 +18,12 @@ def get_media_id(media_type: MediaTypes, media_title: str) -> Optional[str]:
 
 
 def get_media_details_from_id(media_type: MediaTypes, media_id: str) -> dict:
-    url = f"{base_url}/{media_type}/{media_id}?api_key={api_key}&append_to_response=videos,credits"
+    url = f"{base_url}/{media_type}/{media_id}?api_key={tmdb_key}&append_to_response=videos,credits"
     res = requests.get(url).json()
     return res
 
 
-def get_trailer_url_from_details(details: dict) -> str:
+def get_trailer_url_from_details(details: dict) -> Optional[str]:
     videos = details["videos"]["results"]
     for vid in videos:
         if vid["type"] == "Trailer":
@@ -41,10 +41,8 @@ def get_genres_from_details(media_type: MediaTypes, details: dict) -> List[str]:
             res.append(cur_genre.lower().strip())
         else:
 
-            """
-            Turns ['animation', 'adventure & drama', 'wester']
-            into  ['animation', adventure', 'drama', western]
-            """
+            # Turns ['animation', 'adventure & drama', 'wester'] into
+            # ['animation', adventure', 'drama', western]
             split_genres = map(
                 lambda x: x.strip(), cur_genre.lower().strip().split("&")
             )
@@ -55,7 +53,7 @@ def get_genres_from_details(media_type: MediaTypes, details: dict) -> List[str]:
 
 def get_producer_and_director(crew_list: List[dict]) -> List[list]:
 
-    res = [[], []]
+    res: List[list] = [[], []]
     for crew_member in crew_list:
         if crew_member["job"] == "Director":
             res[0].append(crew_member["name"])

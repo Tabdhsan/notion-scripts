@@ -1,17 +1,10 @@
 from time import sleep
-from typing import List
 from MORE_HELPERS import get_all_media_details_from_tmdb
-from Types import MediaTypes, PropCategories
-from movie_data_base import get_media_details_wrapper, get_media_id
-
 from notion_code import (
     get_db_rows_filtered_by_status,
     get_list_of_movies_from_rows,
-    get_notion_multiselect_options,
     set_status_to_error,
-    update_media_db_entry,
     update_notion_info_wrapper,
-    update_trailer,
 )
 
 # TODOTAB: All files need better names
@@ -34,8 +27,8 @@ def finalScriptTest():
         sleep(1)
         update_notion_info_wrapper(key, all_media_details)
 
-    for id in all_media_details["fail"]:
-        set_status_to_error(id)
+    for notion_id in all_media_details["fail"]:
+        set_status_to_error(notion_id)
 
 
 finalScriptTest()

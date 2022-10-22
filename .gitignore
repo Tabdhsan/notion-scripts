@@ -1,2 +1,5 @@
+creds.py
 notion_env
 __pycache__
+.mypy_cache
+.env

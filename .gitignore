@@ -3,3 +3,4 @@ notion_env
 __pycache__
 .mypy_cache
 .env
+master_aws_lambda_script.py

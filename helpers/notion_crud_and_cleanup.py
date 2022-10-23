@@ -1,8 +1,12 @@
 from typing import List
 import requests
-from MORE_HELPERS import get_director_producer_obj_list, get_genre_obj_list
+
 from creds import notion_secret, db_id
-from Types import PropCategories
+from helpers.notion_tmdb_wrappers import (
+    get_director_producer_obj_list,
+    get_genre_obj_list,
+)
+from helpers.types import PropCategories
 
 
 headers = {

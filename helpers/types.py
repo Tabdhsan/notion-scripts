@@ -1,6 +1,5 @@
-import json
-from strenum import StrEnum
 from typing import List, TypedDict
+from strenum import StrEnum
 
 
 class PropCategories(StrEnum):

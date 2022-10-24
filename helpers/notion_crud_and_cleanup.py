@@ -132,18 +132,74 @@ def set_status_to_error(notion_id: str) -> None:
     requests.patch(url, headers=headers, json=payload)
 
 
-def update_trailer(notion_page_id: str, trailer_url: str) -> None:
+def get_streaming_links(media_name: str) -> List[str]:
+    name_with_url_encoding = media_name.replace(" ", "%20")
+    name_with_dashes = media_name.replace(" ", "-")
+    name_with_pluses = media_name.replace(" ", "+")
+
+    unogs_link = f"https://unogs.com/search/{name_with_url_encoding}"
+    just_watch_link = f"https://www.justwatch.com/us/search?q={name_with_url_encoding}"
+    look_moviess_link = f"https://lookmoviess.com/search/{name_with_dashes}"
+    youtube_link = (
+        f"https://www.youtube.com/results?search_query={name_with_pluses}+trailer"
+    )
+
+    return [unogs_link, just_watch_link, look_moviess_link, youtube_link]
+
+
+def update_trailer_and_links(
+    notion_page_id: str, media_name: str, trailer_url: str
+) -> None:
+    # Unogs link : https://unogs.com/search/in%20bruges
+    # Just Watch link : https://www.justwatch.com/us/search?q=in%20bruges
+    # Lookmoviess : https://lookmoviess.com/search/in-bruges
+    # Youtube : https://www.youtube.com/results?search_query=How+I+Met+Your+Mother+trailer
+
+    links = get_streaming_links(media_name)
+
     url = f"https://api.notion.com/v1/blocks/{notion_page_id}/children"
     payload = {
         "children": [
             {
+                "type": "bookmark",
+                "bookmark": {
+                    "url": links[0],
+                },
+            },
+            {
+                "type": "bookmark",
+                "bookmark": {
+                    "url": links[1],
+                },
+            },
+            {
+                "type": "bookmark",
+                "bookmark": {
+                    "url": links[2],
+                },
+            },
+        ]
+    }
+
+    if trailer_url:
+        payload["children"].append(
+            {
                 "video": {
                     "type": "external",
                     "external": {"url": trailer_url},
-                }
-            }
-        ]
-    }
+                },
+            },
+        )
+    else:
+        payload["children"].append(
+            {
+                "type": "bookmark",
+                "bookmark": {
+                    "url": links[3],
+                },
+            },
+        )
+
     requests.patch(url, headers=headers, json=payload)
 
 
@@ -172,5 +228,6 @@ def update_notion_info_wrapper(media_name, all_media_details):
         updated_producers,
     )
 
-    if media_type == "movie":
-        update_trailer(media_details["notion_id"], media_details["trailer"])
+    update_trailer_and_links(
+        media_details["notion_id"], media_name, media_details["trailer"]
+    )

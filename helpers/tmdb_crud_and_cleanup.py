@@ -39,7 +39,6 @@ def get_genres_from_details(media_type: MediaTypes, details: dict) -> List[str]:
         if media_type == "movie":
             tmdb_genre_info.append(cur_genre.lower().strip())
         else:
-
             # Turns ['animation', 'adventure & drama', 'wester'] into
             # ['animation', adventure', 'drama', western]
             split_genres = map(
@@ -51,7 +50,6 @@ def get_genres_from_details(media_type: MediaTypes, details: dict) -> List[str]:
 
 
 def get_producer_and_director(crew_list: List[dict]) -> List[list]:
-
     tmdb_crew_info: List[list] = [[], []]
     for crew_member in crew_list:
         if crew_member["job"] == "Director":
@@ -77,6 +75,8 @@ def extract_info_from_details(
         else f"{seasons} Season(s) - ({episodes} Eps)"
     )
 
+    backdrop_path = details["backdrop_path"]
+
     genres = get_genres_from_details(media_type, details)
 
     directors, producers = get_producer_and_director(details["credits"]["crew"])
@@ -86,6 +86,7 @@ def extract_info_from_details(
     return {
         "title": title,
         "runtime": runtime,
+        "backdrop_path": backdrop_path,
         "genres": genres,
         "directors": directors,
         "producers": producers,

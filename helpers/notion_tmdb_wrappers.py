@@ -26,6 +26,7 @@ def get_all_media_details_from_tmdb(media_from_notion_rows: List[List[str]]):
             {"In Bruges": {
                 "title": "In Bruges",
                 "runtime": "01:48",
+                backdrop_path: "/link",
                 "trailer": "https://www.youtube.com/watch?v=1G6W5CTaULw",
                 "genres": ["comedy", "drama", "crime"],
                 "director": ["Martin McDonagh"],

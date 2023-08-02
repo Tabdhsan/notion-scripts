@@ -67,12 +67,17 @@ def get_list_of_movies_from_rows(db_rows: List[dict]) -> List[List[str]]:
 def update_media_db_entry(
     notion_id: str,
     runtime: str,
+    backdrop_path: str,
     genres: List[dict],
     directors: List[dict],
     producers: List[dict],
 ) -> None:
     payload = {
         "parent": {"database_id": "8352e1aaf48944bbb6d5f341eb4eb9f6"},
+        "cover": {
+            "type": "external",
+            "external": {"url": f"https://image.tmdb.org/t/p/original{backdrop_path}"},
+        },
         "properties": {
             "Run Time": {
                 "id": "_vCI",
@@ -134,17 +139,16 @@ def set_status_to_error(notion_id: str) -> None:
 
 def get_streaming_links(media_name: str) -> List[str]:
     name_with_url_encoding = media_name.replace(" ", "%20")
-    name_with_dashes = media_name.replace(" ", "-")
     name_with_pluses = media_name.replace(" ", "+")
 
     unogs_link = f"https://unogs.com/search/{name_with_url_encoding}"
     just_watch_link = f"https://www.justwatch.com/us/search?q={name_with_url_encoding}"
-    look_moviess_link = f"https://lookmoviess.com/search/{name_with_dashes}"
+    f_movies_link = f"https://fmovies.to/filter?keyword={name_with_pluses}"
     youtube_link = (
         f"https://www.youtube.com/results?search_query={name_with_pluses}+trailer"
     )
 
-    return [unogs_link, just_watch_link, look_moviess_link, youtube_link]
+    return [unogs_link, just_watch_link, f_movies_link, youtube_link]
 
 
 def update_trailer_and_links(
@@ -152,7 +156,7 @@ def update_trailer_and_links(
 ) -> None:
     # Unogs link : https://unogs.com/search/in%20bruges
     # Just Watch link : https://www.justwatch.com/us/search?q=in%20bruges
-    # Lookmoviess : https://lookmoviess.com/search/in-bruges
+    # fmovies.to : https://fmovies.to/filter?keyword=shaun+of+the+dead
     # Youtube : https://www.youtube.com/results?search_query=How+I+Met+Your+Mother+trailer
 
     links = get_streaming_links(media_name)
@@ -199,7 +203,6 @@ def update_trailer_and_links(
                 },
             },
         )
-
     requests.patch(url, headers=headers, json=payload)
 
 
@@ -210,6 +213,8 @@ def update_notion_info_wrapper(media_name, all_media_details):
 
     media_details = all_media_details["success"][media_name]
     media_type = media_details["media_type"]
+    backdrop_path = media_details["backdrop_path"]
+
     updated_genres = get_genre_obj_list(media_details["genres"], genres_from_notion)
 
     updated_directors = get_director_producer_obj_list(
@@ -223,6 +228,7 @@ def update_notion_info_wrapper(media_name, all_media_details):
     update_media_db_entry(
         media_details["notion_id"],
         media_details["runtime"],
+        backdrop_path,
         updated_genres,
         updated_directors,
         updated_producers,

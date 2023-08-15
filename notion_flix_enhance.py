@@ -1,16 +1,17 @@
 from time import sleep
-from helpers.notion_crud_and_cleanup import (
+from notion_crud_and_cleanup import (
     get_db_rows_filtered_by_status,
     get_list_of_movies_from_rows,
     set_status_to_error,
     update_notion_info_wrapper,
 )
-from helpers.notion_tmdb_wrappers import get_all_media_details_from_tmdb
+from notion_tmdb_wrappers import get_all_media_details_from_tmdb
 
 
-def notion_bulk_media_list_update():
+def notion_flix_enhance():
     print("Great choice of media! Let's get started...\n")
     print("Getting all rows from Notion...\n")
+
     # Get all rows from Notion
     rows_from_notion = get_db_rows_filtered_by_status("*")
 
@@ -39,4 +40,4 @@ def notion_bulk_media_list_update():
 
 
 if __name__ == "__main__":
-    notion_bulk_media_list_update()
+    notion_flix_enhance()

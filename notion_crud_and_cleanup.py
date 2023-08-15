@@ -3,10 +3,10 @@ import requests
 
 from custom_types import PropCategories
 from notion_tmdb_wrappers import get_director_producer_obj_list, get_genre_obj_list
-from config import NOTION_DB_ID, NOTION_SECRET
+from config import NOTION_DATABASE_ID, NOTION_API_KEY
 
 headers = {
-    "Authorization": f"Bearer {NOTION_SECRET}",
+    "Authorization": f"Bearer {NOTION_API_KEY}",
     "accept": "application/json",
     "Notion-Version": "2022-06-28",
     "content-type": "application/json",
@@ -14,7 +14,7 @@ headers = {
 
 
 def get_db_props() -> dict:
-    db_url = f"https://api.notion.com/v1/databases/{NOTION_DB_ID}"
+    db_url = f"https://api.notion.com/v1/databases/{NOTION_DATABASE_ID}"
     response = requests.get(db_url, headers=headers)
     return response.json()
 
@@ -30,7 +30,7 @@ def get_notion_multiselect_options(category: PropCategories) -> dict:
 
 def get_db_rows_filtered_by_status(status: str) -> List[dict]:
     payload = {"filter": {"property": "Status", "status": {"equals": status}}}
-    db_url = f"https://api.notion.com/v1/databases/{NOTION_DB_ID}/query"
+    db_url = f"https://api.notion.com/v1/databases/{NOTION_DATABASE_ID}/query"
     response = requests.post(db_url, headers=headers, json=payload)
     return response.json()["results"]
 

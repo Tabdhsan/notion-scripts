@@ -1,4 +1,4 @@
-from config import TMDB_KEY
+from API_KEYS import TMDB_KEY
 
 from typing import List, Optional
 import time

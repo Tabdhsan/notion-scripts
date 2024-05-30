@@ -3,7 +3,7 @@ import requests
 
 from custom_types import PropCategories
 from notion_tmdb_wrappers import get_director_producer_obj_list, get_genre_obj_list
-from config import NOTION_DATABASE_ID, NOTION_API_KEY
+from API_KEYS import NOTION_DATABASE_ID, NOTION_API_KEY
 
 headers = {
     "Authorization": f"Bearer {NOTION_API_KEY}",
@@ -139,7 +139,7 @@ def get_streaming_links(media_name: str) -> List[str]:
 
     unogs_link = f"https://unogs.com/search/{name_with_url_encoding}"
     just_watch_link = f"https://www.justwatch.com/us/search?q={name_with_url_encoding}"
-    f_movies_link = f"https://fmovies.to/filter?keyword={name_with_pluses}"
+    f_movies_link = f"https://fmoviesz.to/filter?keyword={name_with_pluses}"
     youtube_link = (
         f"https://www.youtube.com/results?search_query={name_with_pluses}+trailer"
     )
@@ -158,47 +158,92 @@ def update_trailer_and_links(
     links = get_streaming_links(media_name)
 
     url = f"https://api.notion.com/v1/blocks/{notion_page_id}/children"
-    payload = {
-        "children": [
-            {
-                "type": "bookmark",
-                "bookmark": {
-                    "url": links[0],
-                },
+    children_blocks = [
+        {
+            "type": "bookmark",
+            "bookmark": {
+                "url": links[0],
             },
-            {
-                "type": "bookmark",
-                "bookmark": {
-                    "url": links[1],
-                },
+        },
+        {
+            "type": "bookmark",
+            "bookmark": {
+                "url": links[1],
             },
-            {
-                "type": "bookmark",
-                "bookmark": {
-                    "url": links[2],
-                },
+        },
+        {
+            "type": "bookmark",
+            "bookmark": {
+                "url": links[2],
             },
-        ]
-    }
+        },
+    ]
 
     if trailer_url:
-        payload["children"].append(
+        children_blocks.append(
             {
+                "type": "video",
                 "video": {
                     "type": "external",
                     "external": {"url": trailer_url},
                 },
-            },
+            }
         )
     else:
-        payload["children"].append(
+        children_blocks.append(
             {
                 "type": "bookmark",
                 "bookmark": {
                     "url": links[3],
                 },
-            },
+            }
         )
+
+    # Wrap the children blocks inside a toggle block
+    payload = {
+        "children": [
+            {
+                "type": "toggle",
+                "toggle": {
+                    "rich_text": [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": "My thoughts",
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                "type": "toggle",
+                "toggle": {
+                    "rich_text": [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": "Where to watch",
+                            },
+                        },
+                    ],
+                    "children": children_blocks,
+                },
+            },
+        ]
+    }
+
+    res = requests.patch(url, headers=headers, json=payload)
+
+
+# Update the page icon based on the media type
+def update_page_icon(notion_page_id: str, media_type: str) -> None:
+    url = f"https://api.notion.com/v1/pages/{notion_page_id}"
+
+    print(media_type)
+    icon = "🍿" if media_type == "movie" else "📺"
+
+    payload = {"icon": {"type": "emoji", "emoji": icon}}
+
     requests.patch(url, headers=headers, json=payload)
 
 
@@ -233,3 +278,4 @@ def update_notion_info_wrapper(media_name, all_media_details):
     update_trailer_and_links(
         media_details["notion_id"], media_name, media_details["trailer"]
     )
+    update_page_icon(media_details["notion_id"], media_type)
